@@ -53,7 +53,6 @@ export default function ChatInput({ handleSendMsg,to ,socket}) {
         />
         <button type="submit">
           <Dropzone onDrop={acceptedFiles =>{
-             console.log("dsaads");
              let formData=new FormData;
              const config={
                 header:{'content-type':'multipart/form-data'}
@@ -73,11 +72,49 @@ export default function ChatInput({ handleSendMsg,to ,socket}) {
               to: to._id,
               name:from.username,
             }))
+
+            
           }
           console.log(acceptedFiles[0])
-             axios.post(attachment,formData,config);
-             
-             
+             axios.post(attachment,formData,config).then((response)=>{
+              console.log(response.data);
+              if(response.data.group){
+                console.log("hehehe");
+                socket.current.emit("send-group-msg", {
+                  to: to._id,
+                  from: from._id,
+                  file:response.data.url,
+                  image:response.data.newdata.image,
+                  video:response.data.newdata.video,
+                  other:response.data.newdata.other,
+                  id:response.data.newdata.message
+                });
+              }
+              else{
+                console.log("ads");
+                socket.current.emit("send-msg", {
+                to: to._id,
+                from: from._id,
+                file:response.data.url,
+                image:response.data.newdata.image,
+                video:response.data.newdata.video,
+                other:response.data.newdata.other,
+                id:response.data.newdata.message
+              });
+            }
+               //socket for current message send 
+            var latestmsg={
+              to: to._id,
+              from: from._id,
+              file:response.data.url,
+              image:response.data.newdata.image,
+              video:response.data.newdata.video,
+              other:response.data.newdata.other,
+              id:response.data.newdata.message
+             }
+             handleSendMsg(latestmsg)
+             })
+            
              }}>
                   {({getRootProps, getInputProps}) => (
                     <section>

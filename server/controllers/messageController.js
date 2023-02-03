@@ -62,7 +62,6 @@ module.exports.getMessages = async (req, res, next) => {
     if(to.length>36){
       console.log("group");
       var messages = jsonData.filter(message => message.users.includes(to));
-      console.log(messages);
     }
     else{
       var messages = jsonData.filter(message => message.users.includes(from) && message.users.includes(to));
@@ -83,6 +82,7 @@ module.exports.getMessages = async (req, res, next) => {
           return {
             fromSelf: msg.sender.toString() === from,
             message: decrypt(messages[0].dataValues.message),
+            id:msg.message,
             name: msg.name,
             image:msg.image,
             video:msg.video,
@@ -411,14 +411,61 @@ module.exports.attachment = async (req, res, next) => {
       return res.json({status:false})
     }
     console.log(res.req.file);
-    return res.json({status:true,url:res.req.file.path})
+    console.log("dssf");
+    if(to.length>36){
+      return res.json({status:true,url:res.req.file.filename,newdata:newData,group:'true'})
+    }
+    else{
+      return res.json({status:true,url:res.req.file.filename,newdata:newData})
+    }
   })
   
 } 
 
 
 module.exports.attachmentone = async (req, res, next) => {
-  console.log("here");
-  console.log(req.params.path);
+
+  await MessageChat.findAll({
+    where: {
+      _id: req.params.path
+    },
+    attributes: ["message"],
+  }).then((data)=>{
+    console.log(data[0].dataValues.message);
+    req.params.path=decrypt(data[0].dataValues.message) 
+    
+  })
   return res.download('./attachment/'+req.params.path)
+}
+
+module.exports.attachmentfind=async(request, response, next) => {
+  if (request.params.id) {
+    // the request.filename property is accessible here
+
+     await MessageChat.findAll({
+      where: {
+        _id: request.params.id
+      },
+      attributes: ["message"],
+    }).then((data)=>{
+      if(data[0]){
+      request.params.id=decrypt(data[0].dataValues.message) 
+      // create the file path by joining the static directory and the filename 
+
+        const filePath = path.join(__dirname,'../attachment',request.params.id);
+  
+        // serve the static file
+        response.sendFile(filePath, (error) => { 
+          if (error) {
+            console.log(error);
+            
+          }
+        });
+      }
+    })
+    
+  } else {
+    // return an error if the request.filename property is not accessible
+    response.status(400).send({ error: "Filename not found" });
+  }
 }

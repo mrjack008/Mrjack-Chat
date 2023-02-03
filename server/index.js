@@ -1,6 +1,6 @@
 const connectToPostgres = async () => await sequelize.authenticate();
 const express = require("express");
-const path= require("path")
+
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const { sequelize, user, admin } = require("./models psql/index");
@@ -23,27 +23,6 @@ connectToPostgres()
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/images/:id", (request, response, next) => {
-  if (request.params.id) {
-    // the request.filename property is accessible here
-    console.log(request.params.id)
-    // create the file path by joining the static directory and the filename 
-    const filePath = path.join(__dirname,'attachment',request.params.id);
-    
-    // serve the static file
-    response.sendFile(filePath, (error) => {
-      if (error) {
-        response.status(400).send({ error: "File not found" });
-      }
-    });
-  } else {
-    // return an error if the request.filename property is not accessible
-    response.status(400).send({ error: "Filename not found" });
-  }
-});
-
-
-
 
 const server = app.listen(process.env.PORT, () =>
   console.log(`Server started on ${process.env.PORT}`)
@@ -88,11 +67,20 @@ io.on("connection", (socket) => {
     }
     const group = groups.get(data.to);
     console.log(group);
-    group.forEach((id) => {
+    if(data.file){
+      group.forEach((id) => {
+        console.log(id);
+        console.log("dshj");
+        socket.to(id).emit("msg-recieve", data.file,data.image,data.video,data.other,data.id);
+    });
+    }
+    else{
+      group.forEach((id) => {
         console.log(id);
         console.log("dshj");
         socket.to(id).emit("msg-recieve", data.msg);
     });
+  }
   });
 
 
@@ -103,13 +91,18 @@ io.on("connection", (socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket!='jackbot') {
       console.log(sendUserSocket);
-      socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+      
+      if(data.file){
+        socket.to(sendUserSocket).emit("msg-recieve", data.file,data.image,data.video,data.other,data.id);
+      }
+      else{
+        socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+      }
     }
     if(sendUserSocket=='jackbot'){
       console.log("here");
       const sendUserSockets = onlineUsers.get(data.from);
-      console.log(sendUserSockets);
-      console.log(data.msg);
+  
       socket.to(sendUserSockets).emit("msg-recieve", data.msg);
     }
   });

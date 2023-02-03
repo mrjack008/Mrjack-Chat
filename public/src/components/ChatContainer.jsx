@@ -20,8 +20,8 @@ export default function ChatContainer({ currentChat, socket }) {
   const scrollRef = useRef();
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const download = async (message) => {
-   
-      const response=await fetch(`${downloadattachment}/${message.message}`)
+      console.log(message);
+      const response=await fetch(`${downloadattachment}/${message.id}`)
       console.log(response);
       const data = await response.arrayBuffer();
       const blob = new Blob([data]);
@@ -79,6 +79,13 @@ export default function ChatContainer({ currentChat, socket }) {
   const handleSendMsg = async (msg) => {
 
     console.log(msg);
+    if(msg.id){
+      const msgs = [...messages];
+      msgs.push({ fromSelf: true, message: msg.file ,image:msg.image,video:msg.video,other:msg.other,id:msg.id});
+      setMessages(msgs);
+    }
+    else{
+
     const data = await JSON.parse(
       localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
     );
@@ -130,12 +137,15 @@ export default function ChatContainer({ currentChat, socket }) {
     const msgs = [...messages];
     msgs.push({ fromSelf: true, message: msg });
     setMessages(msgs);
+  }
   };
 
   useEffect(() => {
     if (socket.current) {
-      socket.current.on("msg-recieve", (msg) => {
-        setArrivalMessage({ fromSelf: false, message: msg });
+      socket.current.on("msg-recieve", (msg,image,video,other,id) => {
+        console.log(msg); 
+        console.log(id);
+        setArrivalMessage({ fromSelf: false, message: msg ,image:image,video:video,other:other,id:id});
       });
       socket.current.on("group-msg-received", (msg) => {
         setArrivalMessage({ fromSelf: false, message: msg });
@@ -184,8 +194,8 @@ export default function ChatContainer({ currentChat, socket }) {
                 }`}
               >
                 <div className="content ">
-                  {message.image==='true'&&(<img style={{maxWidth:'200px'}} src={`http://localhost:5000/images/${message.message}`} alt="image"/>)}
-                  {message.video==='true'&&(<video style={{maxWidth:'300px'}} src={`http://localhost:5000/images/${message.message}`} alt="video" type='video/mp4' controls/>)} 
+                  {message.image==='true'&&(<img style={{maxWidth:'200px'}} src={`http://localhost:5000/api/messages/images/${message.id}`} alt="image"/>)}
+                  {message.video==='true'&&(<video style={{maxWidth:'300px'}} src={`http://localhost:5000/api/messages/images/${message.id}`} alt="video" type='video/mp4' controls/>)} 
                   <p>{message.message}</p>
                   {message.image === 'true' && (
                     
@@ -196,15 +206,15 @@ export default function ChatContainer({ currentChat, socket }) {
                   )}
                   {message.video === 'true' && (
                     
-                    <Button onClick={download}>
+                    <Button onClick={()=>{download(message)}}>
                      
                       <BiDownload />
                     </Button>
                   )}
                   {message.other === 'true' && (
                     
-                    <Button onClick={download}>
-                     
+                    <Button onClick={()=>{download(message)}}>
+                      
                       <BiDownload />
                     </Button>
                   )}
@@ -223,7 +233,7 @@ export default function ChatContainer({ currentChat, socket }) {
         })}
         
       </div>
-      <ChatInput handleSendMsg={handleSendMsg} to={currentChat} socket={socket}/>
+      <ChatInput handleSendMsg={handleSendMsg} setMessagesat={setMessages} to={currentChat} socket={socket}/>
     </Container>
   ); 
 }
