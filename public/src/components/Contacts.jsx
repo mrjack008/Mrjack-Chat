@@ -27,7 +27,7 @@ export default function Contacts({ contacts, changeChat,groups }) {
           <div className="brand">
             <img src={Logo} alt="logo" />
             
-            <h3>Wezbo</h3>
+            <h3>Mr Jack</h3>
        
           </div>
           <div className="contacts">
