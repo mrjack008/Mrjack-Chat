@@ -1,11 +1,11 @@
 const { Sequelize, DataTypes } = require("sequelize");
 
 const sequelize = new Sequelize(
-  "Salesbase", // database name
-  "technodbadmin", // username
-  "FkAT2VYj46YL", // password
+   // database name
+  // username
+   // password
   {
-    host: "technodb-instance-1.chwswycu7ttr.ap-south-1.rds.amazonaws.com", // cloud : "43.204.216.144" host : "43.204.74.194" to be used when the postgres database online is ready
+    host:  // cloud : "43.204.216.144" host : "43.204.74.194" to be used when the postgres database online is ready
     dialect: "postgres",
     logging: false,
     port: process.env.PORT,
